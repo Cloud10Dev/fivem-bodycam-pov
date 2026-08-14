@@ -1,5 +1,6 @@
 local enabled = Config.EnabledByDefault
 local nuiReady = false
+local playerActive = false
 local weaponState = nil
 
 local weaponLabels = {
@@ -9,9 +10,13 @@ local weaponLabels = {
     [`WEAPON_SNIPERRIFLE`] = 'SNIPER RIFLE', [`WEAPON_HEAVYSNIPER`] = 'HEAVY SNIPER', [`WEAPON_KNIFE`] = 'KNIFE', [`WEAPON_BAT`] = 'BAT', [`WEAPON_UNARMED`] = 'UNARMED'
 }
 
+local function isGameplayActive()
+    local ped = PlayerPedId()
+    return nuiReady and DoesEntityExist(ped) and not IsEntityDead(ped) and not IsPauseMenuActive() and not IsScreenFadedOut() and not IsPlayerSwitchInProgress() and NetworkIsPlayerActive(PlayerId())
+end
+
 local function setHudVisible(visible)
-    if not Config.HudEnabled then visible = false end
-    SendNUIMessage({ action = 'visibility', visible = visible })
+    SendNUIMessage({ action = 'visibility', visible = visible and Config.HudEnabled, active = visible })
 end
 
 local function forceFirstPerson()
@@ -19,14 +24,12 @@ local function forceFirstPerson()
     SetFollowVehicleCamViewMode(4)
     SetCamViewModeForContext(GetCamActiveViewModeContext(), 4)
     SetCinematicModeActive(false)
-    SetGameplayCamRelativePitch(0.0, 1.0)
-    SetGameplayCamRelativeHeading(0.0)
 end
 
-local function blockCameraSwitch()
-    for _, control in ipairs({0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 68, 69, 70, 91, 92, 99, 100, 114, 115, 116, 117, 118, 121, 122, 123, 199, 200}) do
-        DisableControlAction(0, control, true)
-    end
+local function blockCameraSwitchOnly()
+    DisableControlAction(0, 0, true)
+    DisableControlAction(0, 199, true)
+    DisableControlAction(0, 200, true)
 end
 
 local function getStreet(ped)
@@ -40,45 +43,48 @@ local function compass(heading)
     return names[(math.floor((heading + 22.5) / 45.0) % 8) + 1]
 end
 
-local function gtaWeaponData(ped, hash)
-    local label = weaponLabels[hash] or (hash == `WEAPON_UNARMED` and 'UNARMED' or 'WEAPON')
+local function readWeaponData(ped)
+    local hash = GetSelectedPedWeapon(ped)
+    local stateWeapon = LocalPlayer and LocalPlayer.state and LocalPlayer.state.currentWeapon or nil
+    local label = weaponLabels[hash] or 'UNARMED'
+    local name = hash == `WEAPON_UNARMED` and 'unarmed' or string.lower(label:gsub('[^%w]+', '_'))
     local magazine, reserve = 0, 0
+
     if hash ~= `WEAPON_UNARMED` then
         local ok, clip = GetAmmoInClip(ped, hash)
         magazine = ok and clip or 0
         reserve = GetAmmoInPedWeapon(ped, hash)
     end
-    return { label = label, name = string.lower(label:gsub('[^%w]+', '_')), magazine = magazine, reserve = reserve, armed = hash ~= `WEAPON_UNARMED` }
-end
 
-local function readWeaponData(ped)
-    local hash = GetSelectedPedWeapon(ped)
-    local data = gtaWeaponData(ped, hash)
+    if type(stateWeapon) == 'table' then
+        name = stateWeapon.name or stateWeapon.weapon or name
+        label = stateWeapon.label or label
+        if type(stateWeapon.ammo) == 'number' then magazine = stateWeapon.ammo end
+        if stateWeapon.metadata then reserve = stateWeapon.metadata.ammo or stateWeapon.metadata.clip or reserve end
+    elseif type(stateWeapon) == 'string' then
+        name = stateWeapon
+    end
+
     if GetResourceState('ox_inventory') == 'started' then
         local ok, current = pcall(function() return exports.ox_inventory:getCurrentWeapon() end)
-        if ok and current then
-            data.label = current.label or data.label
-            data.name = current.name or data.name
-            if type(current.ammo) == 'number' then data.magazine = current.ammo end
-            if current.metadata then
-                local metadataAmmo = current.metadata.ammo or current.metadata.clip
-                if type(metadataAmmo) == 'number' then data.reserve = metadataAmmo end
-            end
-            data.armed = true
+        if ok and type(current) == 'table' then
+            name = current.name or name
+            label = current.label or label
+            if type(current.ammo) == 'number' then magazine = current.ammo end
+            if type(current.metadata) == 'table' then reserve = current.metadata.ammo or current.metadata.clip or reserve end
         end
     end
-    return data
-end
 
-local function updateWeaponState()
-    weaponState = readWeaponData(PlayerPedId())
+    local armed = hash ~= `WEAPON_UNARMED` or (type(stateWeapon) == 'table' and stateWeapon.name ~= nil) or (type(stateWeapon) == 'string' and stateWeapon ~= 'unarmed')
+    return { label = label, name = name, magazine = magazine, reserve = reserve, armed = armed }
 end
 
 local function updateHud()
-    if not nuiReady then return end
+    if not playerActive then return end
     local ped = PlayerPedId()
+    weaponState = readWeaponData(ped)
     SendNUIMessage({
-        action = 'update', visible = enabled and Config.HudEnabled,
+        action = 'update', visible = enabled and Config.HudEnabled and playerActive,
         title = Config.HudTitle, color = Config.HudColor, accent = Config.HudAccent,
         unit = Config.ShowUnitId and (Config.UnitIdPrefix .. '-' .. GetPlayerServerId(PlayerId())) or '',
         street = Config.ShowStreet and getStreet(ped) or '', direction = compass(GetEntityHeading(ped)),
@@ -91,26 +97,27 @@ CreateThread(function()
     Wait(1000)
     nuiReady = true
     SetNuiFocus(false, false)
-    setHudVisible(enabled)
-end)
-
-CreateThread(function()
+    setHudVisible(false)
     while true do
-        if enabled then
-            forceFirstPerson()
-            blockCameraSwitch()
-            if Config.HideReticle then HideHudComponentThisFrame(14) end
-            Wait(0)
-        else
-            Wait(250)
+        local active = isGameplayActive()
+        if active ~= playerActive then
+            playerActive = active
+            setHudVisible(enabled and playerActive)
         end
+        Wait(250)
     end
 end)
 
 CreateThread(function()
     while true do
-        if enabled then updateWeaponState() end
-        Wait(Config.WeaponUpdateInterval)
+        if enabled and playerActive then
+            forceFirstPerson()
+            blockCameraSwitchOnly()
+            if Config.HideReticle then HideHudComponentThisFrame(14) end
+            Wait(0)
+        else
+            Wait(250)
+        end
     end
 end)
 
@@ -125,23 +132,27 @@ if Config.AllowToggleCommand then
     RegisterCommand(Config.ToggleCommand, function()
         enabled = not enabled
         SetNuiFocus(false, false)
-        setHudVisible(enabled)
+        setHudVisible(enabled and playerActive)
     end, false)
 end
+
+AddEventHandler('playerSpawned', function()
+    CreateThread(function()
+        Wait(750)
+        playerActive = isGameplayActive()
+        setHudVisible(enabled and playerActive)
+    end)
+end)
 
 AddEventHandler('onClientResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     SetNuiFocus(false, false)
-    CreateThread(function()
-        Wait(1000)
-        nuiReady = true
-        setHudVisible(enabled)
-    end)
+    setHudVisible(false)
 end)
 
 AddEventHandler('onClientResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         SetNuiFocus(false, false)
-        SendNUIMessage({ action = 'visibility', visible = false })
+        SendNUIMessage({ action = 'visibility', visible = false, active = false })
     end
 end)
