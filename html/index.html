@@ -8,11 +8,13 @@
 </head>
 <body>
   <main id="hud" aria-hidden="true">
-    <div class="scanlines"></div>
-    <div class="top-row"><span id="title">BODYCAM</span><span class="rec"><i></i> REC</span></div>
-    <div class="reticle">+</div>
-    <div class="bottom-row"><span id="unit">UNIT-0</span><span id="street">UNKNOWN</span><span id="speed">0 KM/H</span></div>
-    <div class="timestamp" id="timestamp">0000-00-00 00:00:00 UTC</div>
+    <div class="noise"></div><div class="vignette"></div>
+    <div class="corner top-left"></div><div class="corner top-right"></div><div class="corner bottom-left"></div><div class="corner bottom-right"></div>
+    <header><div class="brand"><span class="dot"></span><span id="title">BODYCAM</span><small>LIVE FEED</small></div><div class="record"><span class="rec-dot"></span> REC</div></header>
+    <section class="top-status"><span>CAM 01</span><span id="direction">N</span><span>1080P</span></section>
+    <div class="center-marker"><span></span><i></i><span></span></div>
+    <section class="bottom-panel"><div><small>UNIT</small><strong id="unit">UNIT-0</strong></div><div class="location"><small>LOCATION</small><strong id="street">UNKNOWN</strong></div><div class="speed"><strong id="speed">0</strong><small>KM/H</small></div></section>
+    <footer><span id="timestamp">0000-00-00 00:00:00 UTC</span><span class="status"><i></i> SYSTEM NORMAL</span></footer>
   </main>
   <script src="app.js"></script>
 </body>
