@@ -6,7 +6,7 @@ local weaponState = nil
 local weaponLabels = {
     [`WEAPON_PISTOL`] = 'PISTOL', [`WEAPON_COMBATPISTOL`] = 'COMBAT PISTOL', [`WEAPON_APPISTOL`] = 'AP PISTOL', [`WEAPON_PISTOL_MK2`] = 'PISTOL MK II',
     [`WEAPON_SMG`] = 'SMG', [`WEAPON_MICROSMG`] = 'MICRO SMG', [`WEAPON_ASSAULTRIFLE`] = 'ASSAULT RIFLE', [`WEAPON_CARBINERIFLE`] = 'CARBINE RIFLE',
-    [`WEAPON_SPECIALCARBINE`] = 'SPECIAL CARBINE', [`WEAPON_PUMPSHOTGUN`] = 'PUMP SHOTGUN', [`WEAPON_SAWNOFFSHOTGUN`] = 'SAWED-OFF',
+    [`WEAPON_SPECIALCARBINE`] = 'SPECIAL CARBINE', [`WEAPON_PUMPSHOTGUN`] = 'PUMP SHOTGUN', [`WEAPON_SAWNOFF_SHOTGUN`] = 'SAWED-OFF',
     [`WEAPON_SNIPERRIFLE`] = 'SNIPER RIFLE', [`WEAPON_HEAVYSNIPER`] = 'HEAVY SNIPER', [`WEAPON_KNIFE`] = 'KNIFE', [`WEAPON_BAT`] = 'BAT', [`WEAPON_UNARMED`] = 'UNARMED'
 }
 
@@ -20,10 +20,14 @@ local function setHudVisible(visible)
 end
 
 local function forceFirstPerson()
+    local inVehicle = IsPedInAnyVehicle(PlayerPedId(), false)
     SetFollowPedCamViewMode(4)
     SetFollowVehicleCamViewMode(4)
     SetCamViewModeForContext(GetCamActiveViewModeContext(), 4)
     SetCinematicModeActive(false)
+    SetGameplayCamRelativePitch(inVehicle and Config.VehicleRelativePitch or Config.CameraRelativePitch, 1.0)
+    SetGameplayCamRelativeHeading(inVehicle and Config.VehicleRelativeHeading or Config.CameraRelativeHeading)
+    SetGameplayCamFov(inVehicle and Config.VehicleFirstPersonFov or Config.FirstPersonFov)
 end
 
 local function blockCameraSwitchOnly()
@@ -49,13 +53,11 @@ local function readWeaponData(ped)
     local label = weaponLabels[hash] or 'UNARMED'
     local name = hash == `WEAPON_UNARMED` and 'unarmed' or string.lower(label:gsub('[^%w]+', '_'))
     local magazine, reserve = 0, 0
-
     if hash ~= `WEAPON_UNARMED` then
         local ok, clip = GetAmmoInClip(ped, hash)
         magazine = ok and clip or 0
         reserve = GetAmmoInPedWeapon(ped, hash)
     end
-
     if type(stateWeapon) == 'table' then
         name = stateWeapon.name or stateWeapon.weapon or name
         label = stateWeapon.label or label
@@ -64,7 +66,6 @@ local function readWeaponData(ped)
     elseif type(stateWeapon) == 'string' then
         name = stateWeapon
     end
-
     if GetResourceState('ox_inventory') == 'started' then
         local ok, current = pcall(function() return exports.ox_inventory:getCurrentWeapon() end)
         if ok and type(current) == 'table' then
@@ -74,7 +75,6 @@ local function readWeaponData(ped)
             if type(current.metadata) == 'table' then reserve = current.metadata.ammo or current.metadata.clip or reserve end
         end
     end
-
     local armed = hash ~= `WEAPON_UNARMED` or (type(stateWeapon) == 'table' and stateWeapon.name ~= nil) or (type(stateWeapon) == 'string' and stateWeapon ~= 'unarmed')
     return { label = label, name = name, magazine = magazine, reserve = reserve, armed = armed }
 end
@@ -83,14 +83,7 @@ local function updateHud()
     if not playerActive then return end
     local ped = PlayerPedId()
     weaponState = readWeaponData(ped)
-    SendNUIMessage({
-        action = 'update', visible = enabled and Config.HudEnabled and playerActive,
-        title = Config.HudTitle, color = Config.HudColor, accent = Config.HudAccent,
-        unit = Config.ShowUnitId and (Config.UnitIdPrefix .. '-' .. GetPlayerServerId(PlayerId())) or '',
-        street = Config.ShowStreet and getStreet(ped) or '', direction = compass(GetEntityHeading(ped)),
-        timestamp = os.date('!%Y-%m-%d %H:%M:%S UTC'), noise = Config.HudNoise, glitch = Config.HudGlitch,
-        weapon = Config.ShowWeapon and weaponState or nil
-    })
+    SendNUIMessage({ action = 'update', visible = enabled and Config.HudEnabled and playerActive, title = Config.HudTitle, color = Config.HudColor, accent = Config.HudAccent, unit = Config.ShowUnitId and (Config.UnitIdPrefix .. '-' .. GetPlayerServerId(PlayerId())) or '', street = Config.ShowStreet and getStreet(ped) or '', direction = compass(GetEntityHeading(ped)), timestamp = os.date('!%Y-%m-%d %H:%M:%S UTC'), noise = Config.HudNoise, glitch = Config.HudGlitch, weapon = Config.ShowWeapon and weaponState or nil })
 end
 
 CreateThread(function()

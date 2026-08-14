@@ -2,29 +2,28 @@
 
 Standalone forced first-person bodycam resource for FiveM with an orange/red HUD and ox_inventory weapon telemetry.
 
-## Stability fixes
+## Camera tuning
 
-- Restores full mouse look, vertical camera movement, aiming, shooting, sprinting, jumping, and movement controls.
-- Only the camera-switch and pause/cinematic controls are blocked.
-- First-person enforcement runs only after the player is active and spawned.
-- HUD is hidden during loading, pause, character selection, screen fades, and before the player is fully active.
-- Reads ox_inventory equipped weapon state from the active item/state and falls back to GTA natives for weapon and ammo values.
+The uploaded screenshot showed the native first-person view too far forward, causing the rifle to be cropped and leaving the full weapon out of frame. This update tunes the native gameplay camera backward/downward through relative camera values while preserving normal mouse look and weapon handling.
 
-## ox_inventory hotkeys
+- On-foot FOV: `82.0`.
+- Vehicle FOV: `78.0`.
+- On-foot relative pitch: `-1.5`.
+- On-foot relative heading: `-0.35`.
+- Vehicle relative pitch: `-0.5`.
+- Vehicle relative heading: `-0.15`.
 
-Hotkeys `1`, `2`, `3`, `4`, and `5` are handled by ox_inventory. This resource reads the weapon after ox_inventory equips it; merely having an item in a hotbar slot is not enough. The slot must equip the item and create an active weapon state.
+Adjust these values in `config.lua` if a custom weapon pack has a different camera profile. GTA/FiveM first-person FOV and weapon framing are also affected by the native camera and weapon metadata, so camera tuning should remain moderate rather than using extreme FOV values. [web:116][web:117]
+
+## Stability
+
+Mouse look, aiming, movement, sprinting, jumping, and shooting remain enabled. Only camera-switch and pause/cinematic controls are blocked. The HUD remains hidden until the player is active and spawned.
+
+## ox_inventory
 
 ```cfg
 ensure ox_inventory
 ensure fivem-bodycam-pov
 ```
 
-## Restart
-
-```text
-restart fivem-bodycam-pov
-```
-
-If vertical look remains unavailable, check the FiveM mouse input setting. Some FiveM mouse bugs are caused by the client `profile_mousetype` setting; changing it to `0` has been reported as a workaround. [web:102]
-
-If weapons remain undetected, inspect the client F8 console and confirm that ox_inventory is running before this resource and that the hotkey actually equips the weapon. ox_inventory manages weapons as inventory items and maintains current-weapon state separately from ordinary hotbar contents. [web:46][web:95]
+The active hotbar item must actually equip the GTA weapon for weapon telemetry to update. [web:46][web:105]
