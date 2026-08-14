@@ -60,7 +60,7 @@ local function updateHeadCamera()
     SetCamFov(cam, vehicle ~= 0 and Config.VehicleFirstPersonFov or Config.FirstPersonFov)
     SetCamActive(cam, true)
     RenderScriptCams(true, false, 0, true, true)
-    AttachCamToEntity(cam, ped, offsetX, offsetY, offsetZ, true)
+    AttachCamToPedBone(cam, ped, GetPedBoneIndex(ped, 31086), offsetX, offsetY, offsetZ, true)
 end
 
 local function blockCameraSwitchOnly()
@@ -153,7 +153,7 @@ RegisterCommand('bodycam_offset', function(_, args)
 end, false)
 
 RegisterCommand('bodycam_reset', function()
-    Config.CameraOffsetX, Config.CameraOffsetY, Config.CameraOffsetZ = 0.0, -0.12, 0.08
+    Config.CameraOffsetX, Config.CameraOffsetY, Config.CameraOffsetZ = 0.0, 0.18, 0.12
     cameraYaw = GetEntityHeading(PlayerPedId())
     cameraPitch = 0.0
     print('[bodycam] Camera offset reset')

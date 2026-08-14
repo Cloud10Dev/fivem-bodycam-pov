@@ -2,40 +2,24 @@
 
 Standalone forced first-person bodycam resource for FiveM with an orange/red HUD and adjustable head-mounted camera.
 
-## Why the native values did not help
+## Camera placement fix
 
-The previous `SetGameplayCamRelativePitch` and `SetGameplayCamRelativeHeading` values changed camera orientation, not the physical camera-to-weapon distance. That is why changing numbers appeared to make little or no difference. GTA V also does not provide a general native viewmodel-offset control for every first-person weapon; weapon positioning can be affected by weapon metadata. [web:115][web:144]
+The previous version used an entity-relative offset that could place the camera inside the torso. This version attaches the camera to the actual head bone index using `AttachCamToPedBone`, with a positive depth offset that places the camera just outside the face/head area. FiveM distinguishes between a bone ID and a bone index, so the resource resolves the head index with `GetPedBoneIndex` before attaching. [web:146][web:161]
 
-## New explicit camera positioning
-
-The resource now uses a custom camera attached near the head bone with direct X/Y/Z offsets:
+Default values:
 
 ```lua
 Config.CameraOffsetX = 0.0
-Config.CameraOffsetY = -0.12
-Config.CameraOffsetZ = 0.08
+Config.CameraOffsetY = 0.18
+Config.CameraOffsetZ = 0.12
 ```
 
-- X: left/right.
-- Y: forward/backward relative to the head. Negative moves the camera backward.
-- Z: up/down.
-
-The default is deliberately behind and slightly above the head so more of the weapon should remain visible. The FOV is `78.0`, which is less distorted and gives the weapon more screen presence.
-
-## Live tuning
-
-Use the F8 console while in gameplay:
+If the view is still too far inside or outside, use the live command:
 
 ```text
-bodycam_offset 0.00 -0.20 0.10
-bodycam_offset 0.00 -0.30 0.12
+bodycam_offset 0.00 0.12 0.10
+bodycam_offset 0.00 0.25 0.15
 bodycam_reset
 ```
 
-Changes apply immediately without editing or restarting the resource.
-
-## Controls
-
-The custom camera reads normal mouse look while leaving movement, sprint, jump, aim, and fire controls available. Only camera switching and pause/cinematic controls are blocked.
-
-The HUD remains hidden until the player is fully active and spawned.
+The camera retains normal mouse look, aiming, running, jumping, shooting, and movement. Only camera switching and pause/cinematic controls are blocked.
