@@ -1,20 +1,15 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BODYCAM LIVE</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>BODYCAM LIVE</title><link rel="stylesheet" href="style.css"></head>
 <body>
   <main id="hud">
     <div class="glitch-layer"></div><div class="noise"></div><div class="vignette"></div><div class="scanlines"></div>
     <div class="frame frame-tl"></div><div class="frame frame-tr"></div><div class="frame frame-bl"></div><div class="frame frame-br"></div>
-    <header><div class="brand"><span class="orange-dot"></span><b id="title">BODYCAM</b><em>LIVE</em></div><div class="rec"><span></span> REC</div></header>
-    <div class="meta"><span>CAM 01</span><span id="direction">N</span><span>1080P</span></div>
-    <div class="panel"><div><label>UNIT</label><b id="unit">UNIT-0</b></div><div class="location"><label>LOCATION</label><b id="street">UNKNOWN</b></div></div>
-    <section id="weapon" class="weapon"><div class="weapon-icon" id="weapon-icon">—</div><div class="weapon-info"><label id="weapon-label">UNARMED</label><small>AMMO</small></div><div class="ammo"><b id="magazine">0</b><span>/</span><strong id="reserve">0</strong></div></section>
-    <footer><span id="timestamp">0000-00-00 00:00:00 UTC</span><span class="ok"><i></i> SYSTEM NORMAL</span></footer>
+    <header><div class="brand glitch-text" data-text="BODYCAM"><span class="orange-dot"></span><b id="title">BODYCAM</b><em>LIVE</em></div><div class="rec glitch-text" data-text="REC"><span></span> REC</div></header>
+    <div class="meta glitch-text" data-text="CAM 01"><span>CAM 01</span><span id="direction">N</span><span>1080P</span></div>
+    <div class="panel"><div class="glitch-text" data-text="UNIT"><label>UNIT</label><b id="unit">UNIT-0</b></div><div class="location glitch-text" data-text="LOCATION"><label>LOCATION</label><b id="street">UNKNOWN</b></div></div>
+    <section id="weapon" class="weapon glitch-text" data-text="AMMO"><div class="weapon-icon" id="weapon-icon">—</div><div class="weapon-info"><label id="weapon-label">UNARMED</label><small>AMMO</small></div><div class="ammo"><b id="magazine">0</b><span>/</span><strong id="reserve">0</strong></div></section>
+    <footer><span id="timestamp" class="glitch-text" data-text="UTC">0000-00-00 00:00:00 UTC</span><span class="ok"><i></i> SYSTEM NORMAL</span></footer>
   </main>
   <script src="app.js"></script>
 </body>

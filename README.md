@@ -1,31 +1,31 @@
 # FiveM Bodycam POV
 
-Standalone forced first-person bodycam resource for FiveM with a red-orange telemetry HUD and optional ox_inventory weapon display.
+Standalone forced first-person bodycam resource for FiveM with an orange/red HUD and weapon telemetry.
 
-## Features
+## Latest fixes
 
-- Native first-person head/eye placement with a stronger FOV of 100 for a pronounced wide-angle/fisheye feel.
-- Mouse look preserved; camera switching remains blocked.
-- Red/orange bodycam HUD with scanlines, vignette, noise, framing corners, and subtle global glitch lines.
-- No center crosshair and no speed display.
-- Bottom-right weapon panel with weapon name, icon-style identifier, magazine ammo, and reserve ammo.
+- Hard-locks native first person every frame and blocks camera switching without disabling mouse look.
+- Uses a more FPS-like FOV of 88 rather than an extreme wide-angle value that can make weapons look small.
+- Keeps the native GTA first-person weapon camera instead of attaching a custom camera inside the body.
+- Adds visible RGB-split glitch bursts to HUD text and telemetry lines, not only the background.
+- Polls weapon state every 50 ms so ox_inventory hotbar changes update immediately.
+- Uses `exports.ox_inventory:getCurrentWeapon()` when available and falls back to GTA weapon/ammo natives.
+- Adds `dependency 'ox_inventory'` so resource startup order is explicit.
+- No speed indicator and no center crosshair.
 
-## ox_inventory
-
-The client reads the currently equipped weapon through the ox_inventory export when ox_inventory is running, then falls back to GTA weapon natives if it is unavailable. Ensure ox_inventory starts before this resource:
+## Installation
 
 ```cfg
 ensure ox_inventory
 ensure fivem-bodycam-pov
 ```
 
-The ox_inventory project provides weapon and item inventory functionality and exposes the current weapon data used by this resource. [web:47][web:46]
+Restart after updating:
 
-## Installation
+```text
+restart fivem-bodycam-pov
+```
 
-1. Put the resource in your server's `resources` directory.
-2. Add the `ensure` lines above to `server.cfg`.
-3. Restart the resource.
-4. Use `/bodycam` to toggle the view.
+If weapon data still remains `UNARMED`, verify the weapon is actually equipped rather than only present in the hotbar, and check the client F8 console for ox_inventory export errors. The resource intentionally uses the current equipped weapon, because a hotbar slot is not necessarily the active GTA weapon.
 
-Tune `Config.FirstPersonFov` between 90 and 110 to adjust the fisheye strength. Very high values can cause distortion and motion discomfort.
+The camera approach follows common FiveM first-person resources that force view mode 4 and tune FOV, while weapon presentation remains native to GTA for proper hands/weapon alignment. [web:2][web:70]
