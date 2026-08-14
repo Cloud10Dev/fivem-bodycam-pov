@@ -1,6 +1,15 @@
 local enabled = Config.EnabledByDefault
 local nuiReady = false
 
+local weaponLabels = {
+    [`WEAPON_PISTOL`] = 'PISTOL', [`WEAPON_COMBATPISTOL`] = 'COMBAT PISTOL', [`WEAPON_APPISTOL`] = 'AP PISTOL',
+    [`WEAPON_SMG`] = 'SMG', [`WEAPON_MICROSMG`] = 'MICRO SMG', [`WEAPON_ASSAULTRIFLE`] = 'ASSAULT RIFLE',
+    [`WEAPON_CARBINERIFLE`] = 'CARBINE RIFLE', [`WEAPON_SPECIALCARBINE`] = 'SPECIAL CARBINE',
+    [`WEAPON_PUMPSHOTGUN`] = 'PUMP SHOTGUN', [`WEAPON_SAWNOFFSHOTGUN`] = 'SAWED-OFF',
+    [`WEAPON_SNIPERRIFLE`] = 'SNIPER RIFLE', [`WEAPON_HEAVYSNIPER`] = 'HEAVY SNIPER',
+    [`WEAPON_KNIFE`] = 'KNIFE', [`WEAPON_BAT`] = 'BAT', [`WEAPON_UNARMED`] = 'UNARMED'
+}
+
 local function setHudVisible(visible)
     if not Config.HudEnabled then visible = false end
     SendNUIMessage({ action = 'visibility', visible = visible })
@@ -11,6 +20,7 @@ local function forceFirstPerson()
     SetFollowVehicleCamViewMode(4)
     SetCamViewModeForContext(GetCamActiveViewModeContext(), 4)
     SetCinematicModeActive(false)
+    SetGameplayCamFov(Config.FirstPersonFov)
 end
 
 local function disableCameraSwitchOnly()
@@ -30,21 +40,41 @@ local function direction(heading)
     return names[(math.floor((heading + 22.5) / 45.0) % 8) + 1]
 end
 
+local function getWeaponData(ped)
+    local hash = GetSelectedPedWeapon(ped)
+    local label = weaponLabels[hash] or (hash == `WEAPON_UNARMED` and 'UNARMED' or 'WEAPON')
+    local icon = string.lower(label:gsub('[^%w]+', '_'))
+    local magazine = 0
+    local reserve = 0
+    if hash ~= `WEAPON_UNARMED` then
+        local ok, ammoInClip = GetAmmoInClip(ped, hash)
+        magazine = ok and ammoInClip or 0
+        reserve = GetAmmoInPedWeapon(ped, hash)
+    end
+    if GetResourceState('ox_inventory') == 'started' then
+        local ok, current = pcall(function() return exports.ox_inventory:getCurrentWeapon() end)
+        if ok and current then
+            label = current.label or label
+            magazine = current.ammo or magazine
+            if current.metadata and current.metadata.ammo then reserve = current.metadata.ammo end
+            icon = current.name and current.name:gsub('weapon_', '') or icon
+        end
+    end
+    return { label = label, icon = icon, magazine = magazine, reserve = reserve, armed = hash ~= `WEAPON_UNARMED` }
+end
+
 local function updateHud()
     if not nuiReady then return end
     local ped = PlayerPedId()
-    local vehicle = GetVehiclePedIsIn(ped, false)
-    local speed = vehicle ~= 0 and math.floor(GetEntitySpeed(vehicle) * 3.6 + 0.5) or 0
     SendNUIMessage({
         action = 'update', visible = enabled and Config.HudEnabled,
-        title = Config.HudTitle, color = Config.HudColor,
+        title = Config.HudTitle, color = Config.HudColor, accent = Config.HudAccent,
         unit = Config.ShowUnitId and (Config.UnitIdPrefix .. '-' .. GetPlayerServerId(PlayerId())) or '',
         street = Config.ShowStreet and getStreet(ped) or '',
-        speed = Config.ShowVehicleSpeed and speed or 0,
         direction = direction(GetEntityHeading(ped)),
         timestamp = os.date('!%Y-%m-%d %H:%M:%S UTC'),
-        noise = Config.HudNoise, moving = GetEntitySpeed(ped) > 0.5,
-        vehicle = vehicle ~= 0
+        noise = Config.HudNoise, glitch = Config.HudGlitch,
+        weapon = Config.ShowWeapon and getWeaponData(ped) or nil
     })
 end
 

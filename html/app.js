@@ -2,10 +2,14 @@ const hud = document.getElementById('hud');
 const title = document.getElementById('title');
 const unit = document.getElementById('unit');
 const street = document.getElementById('street');
-const speed = document.getElementById('speed');
 const direction = document.getElementById('direction');
 const timestamp = document.getElementById('timestamp');
 const noise = document.querySelector('.noise');
+const weapon = document.getElementById('weapon');
+const weaponLabel = document.getElementById('weapon-label');
+const weaponIcon = document.getElementById('weapon-icon');
+const magazine = document.getElementById('magazine');
+const reserve = document.getElementById('reserve');
 
 function setVisible(value) {
   hud.style.display = value ? 'block' : 'none';
@@ -18,12 +22,20 @@ window.addEventListener('message', (event) => {
   if (data.action === 'visibility') setVisible(Boolean(data.visible));
   if (data.action !== 'update') return;
   setVisible(Boolean(data.visible));
-  if (data.color) document.documentElement.style.setProperty('--green', data.color);
+  if (data.color) document.documentElement.style.setProperty('--orange', data.color);
+  if (data.accent) document.documentElement.style.setProperty('--accent', data.accent);
   if (data.title) title.textContent = data.title;
   unit.textContent = data.unit || '';
   street.textContent = data.street || 'UNKNOWN';
-  speed.textContent = `${data.speed || 0} KM/H`;
   direction.textContent = data.direction || 'N';
   timestamp.textContent = data.timestamp || '';
-  noise.style.opacity = data.noise ? (data.moving ? '.12' : '.06') : '0';
+  const current = data.weapon;
+  weapon.style.display = current ? 'flex' : 'none';
+  if (current) {
+    weaponLabel.textContent = current.label || 'WEAPON';
+    weaponIcon.textContent = (current.icon || 'WEAPON').replaceAll('_', ' ');
+    magazine.textContent = current.magazine ?? 0;
+    reserve.textContent = current.reserve ?? 0;
+  }
+  noise.style.opacity = data.noise ? '.07' : '0';
 });
