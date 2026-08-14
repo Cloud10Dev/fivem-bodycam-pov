@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bodycam HUD</title>
+  <title>BODYCAM LIVE</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="hud" aria-hidden="true">
-    <div class="noise"></div><div class="vignette"></div>
-    <div class="corner top-left"></div><div class="corner top-right"></div><div class="corner bottom-left"></div><div class="corner bottom-right"></div>
-    <header><div class="brand"><span class="dot"></span><span id="title">BODYCAM</span><small>LIVE FEED</small></div><div class="record"><span class="rec-dot"></span> REC</div></header>
-    <section class="top-status"><span>CAM 01</span><span id="direction">N</span><span>1080P</span></section>
-    <div class="center-marker"><span></span><i></i><span></span></div>
-    <section class="bottom-panel"><div><small>UNIT</small><strong id="unit">UNIT-0</strong></div><div class="location"><small>LOCATION</small><strong id="street">UNKNOWN</strong></div><div class="speed"><strong id="speed">0</strong><small>KM/H</small></div></section>
-    <footer><span id="timestamp">0000-00-00 00:00:00 UTC</span><span class="status"><i></i> SYSTEM NORMAL</span></footer>
+  <main id="hud">
+    <div class="noise"></div><div class="vignette"></div><div class="scanlines"></div>
+    <div class="frame frame-tl"></div><div class="frame frame-tr"></div><div class="frame frame-bl"></div><div class="frame frame-br"></div>
+    <header><div class="brand"><span class="green-dot"></span><b id="title">BODYCAM</b><em>LIVE</em></div><div class="rec"><span></span> REC</div></header>
+    <div class="meta"><span>CAM 01</span><span id="direction">N</span><span>1080P</span></div>
+    <div class="crosshair"><i></i></div>
+    <div class="panel"><div><label>UNIT</label><b id="unit">UNIT-0</b></div><div class="location"><label>LOCATION</label><b id="street">UNKNOWN</b></div><div class="speed"><label>SPEED</label><b id="speed">0 KM/H</b></div></div>
+    <footer><span id="timestamp">0000-00-00 00:00:00 UTC</span><span class="ok"><i></i> SYSTEM NORMAL</span></footer>
   </main>
   <script src="app.js"></script>
 </body>

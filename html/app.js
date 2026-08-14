@@ -7,18 +7,23 @@ const direction = document.getElementById('direction');
 const timestamp = document.getElementById('timestamp');
 const noise = document.querySelector('.noise');
 
+function setVisible(value) {
+  hud.style.display = value ? 'block' : 'none';
+  hud.setAttribute('aria-hidden', value ? 'false' : 'true');
+}
+
+window.addEventListener('DOMContentLoaded', () => setVisible(true));
 window.addEventListener('message', (event) => {
   const data = event.data || {};
-  if (data.action === 'visibility') hud.style.display = data.visible ? 'block' : 'none';
+  if (data.action === 'visibility') setVisible(Boolean(data.visible));
   if (data.action !== 'update') return;
-  hud.style.display = data.visible ? 'block' : 'none';
-  if (data.color) document.documentElement.style.setProperty('--hud', data.color);
+  setVisible(Boolean(data.visible));
+  if (data.color) document.documentElement.style.setProperty('--green', data.color);
   if (data.title) title.textContent = data.title;
   unit.textContent = data.unit || '';
   street.textContent = data.street || 'UNKNOWN';
-  speed.textContent = data.speed == null ? '0' : data.speed;
+  speed.textContent = `${data.speed || 0} KM/H`;
   direction.textContent = data.direction || 'N';
   timestamp.textContent = data.timestamp || '';
-  noise.style.opacity = data.noise ? String(0.06 + ((data.movement || 0) * 0.08)) : '0';
-  hud.classList.toggle('moving', Boolean(data.movement > 0.05));
+  noise.style.opacity = data.noise ? (data.moving ? '.12' : '.06') : '0';
 });
